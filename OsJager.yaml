@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "OS Lab - EC2 instance with performance issues  - Ubuntu 24.04"
+
+Resources:
+  PerfLabSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "SSH access for lab"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  PerfLabInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.small   # 2 vCPU, 2 GB RAM (AWS Academy limit)
+      ImageId: ami-025d99823a4caad37   # Ubuntu 24.04 LTS en us-east-1
+      KeyName: vockey
+      Tags: 
+        - Key: "Name"
+          Value: "gollum"
+      SecurityGroupIds:
+        - !Ref PerfLabSG
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install -y stress
+
+          # Decodificar y crear el script desde Base64
+          cat << 'EOF' | base64 -d > /tmp/lab.sh
+          IyEvYmluL2Jhc2gKIyA9PT09PSBPUyBMYWIgU2NlbmFyaW8gPT09PT0KCiMgUHJvYmxlbWEgMTog
+          Q1BVIHNhdHVyYWRhCm5vaHVwIHllcyA+IC9kZXYvbnVsbCAmCgojIFByb2JsZW1hIDI6IE1lbW9y
+          aWEgY29tcHJvbWV0aWRhCm5vaHVwIHN0cmVzcyAtLXZtIDEgLS12bS1ieXRlcyA1MDBNIC0tdm0t
+          aGFuZyAwICYKCiMgUHJvYmxlbWEgMzogRGlzY28gY2FzaSBsbGVubwpkZCBpZj0vZGV2L3plcm8g
+          b2Y9L3Zhci90bXAvYmlnZmlsZTEgYnM9MU0gY291bnQ9MjAwMApkZCBpZj0vZGV2L3plcm8gb2Y9
+          L3Zhci90bXAvYmlnZmlsZTIgYnM9MU0gY291bnQ9MjIwMAo=
+          EOF
+
+          chmod +x /tmp/lab.sh
+          nohup /tmp/lab.sh &
